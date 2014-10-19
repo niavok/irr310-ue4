@@ -168,6 +168,22 @@ void AIrr310Ship::PhysicSubTick(float deltaTime)
 	TickSumTorque = FVector::ZeroVector;
 }
 
+static float computeSoftAngularCommand(float measure, float mMaxAngularSpeed, float mSoftModeAngularLimit, float command) {
+	float result;
+	if (measure - (command * mMaxAngularSpeed) < -mSoftModeAngularLimit)
+	{
+		result = -1;
+	}
+	else if (measure - (command * mMaxAngularSpeed) > mSoftModeAngularLimit)
+	{
+		result = 1;
+	}
+	else
+	{
+		result = (1.0f / mSoftModeAngularLimit) * (measure - (command * mMaxAngularSpeed));
+	}
+	return result;
+}
 
 void AIrr310Ship::AutoPilotSubTick(float deltaTime)
 {
@@ -186,14 +202,59 @@ void AIrr310Ship::AutoPilotSubTick(float deltaTime)
 		ThrustCommand = 1;
 	}
 
-	TArray<UActorComponent*> Modules = GetComponentsByClass(UIrr310ShipEngine::StaticClass());
-	for (int32 i = 0; i < Modules.Num(); i++) {
-		UIrr310ShipEngine* Engine = Cast<UIrr310ShipEngine>(Modules[i]);
+	TArray<UActorComponent*> Engines = GetComponentsByClass(UIrr310ShipEngine::StaticClass());
+	for (int32 i = 0; i < Engines.Num(); i++) {
+		UIrr310ShipEngine* Engine = Cast<UIrr310ShipEngine>(Engines[i]);
 		Engine->SetTargetThrustRatio(ThrustCommand);
 	}
 
+	FVector COM = c->GetBodyInstance()->GetCOMPosition();
 
-	// Simple Kill Rot
+	// Simple kill rot
+	FVector AngularVelocity = c->GetPhysicsAngularVelocity();
+	
+
+	FVector AngularVelocityCommand = FVector(0, 0, 0);
+	FVector aim = FVector(0, 0, 0);
+	float MaxAngularSpeed = 180;
+	float SoftModeAngularLimit = 90;
+
+	aim.X = computeSoftAngularCommand(AngularVelocity.X, MaxAngularSpeed, SoftModeAngularLimit, AngularVelocityCommand.X);
+	aim.Y = computeSoftAngularCommand(AngularVelocity.Y, MaxAngularSpeed, SoftModeAngularLimit, AngularVelocityCommand.Y);
+	aim.Z = computeSoftAngularCommand(AngularVelocity.Z, MaxAngularSpeed, SoftModeAngularLimit, AngularVelocityCommand.Z);
+
+
+	for (int32 i = 0; i < Engines.Num(); i++) {
+		UIrr310ShipEngine* Engine = Cast<UIrr310ShipEngine>(Engines[i]);
+
+
+		
+		FVector EngineOffset = (Engine->GetComponentLocation() - COM) / 100;
+		
+		FVector WorldThurstAxis = Engine->GetComponentToWorld().GetRotation().RotateVector(Engine->ThurstAxis);
+
+		FVector TorqueDirection = FVector::CrossProduct(EngineOffset, WorldThurstAxis);
+		TorqueDirection.Normalize();
+
+		float alpha = 0;
+
+		if (FMath::Abs(TorqueDirection.X) > 0.001 && FMath::Abs(aim.X) > 0.001)
+		{
+			alpha += (Engine->MaxThrust - Engine->MinThrust) * aim.X * (TorqueDirection.X > 0 ? 1 : -1);
+		}
+
+		if (FMath::Abs(TorqueDirection.Y) > 0.001 && FMath::Abs(aim.Y) > 0.001)
+		{
+			alpha += (Engine->MaxThrust - Engine->MinThrust) * aim.Y * (TorqueDirection.Y > 0 ? 1 : -1);
+		}
+
+		if (FMath::Abs(TorqueDirection.Z) > 0.001 && FMath::Abs(aim.Z) > 0.001)
+		{
+			alpha += (Engine->MaxThrust - Engine->MinThrust) * aim.Z * (TorqueDirection.Z > 0 ? 1 : -1);
+		}
+
+		Engine->TargetThrust = Engine->TargetThrust - alpha;
+	}
 
 
 }

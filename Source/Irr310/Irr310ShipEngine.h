@@ -33,6 +33,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
 	float ThrustVariationSpeed;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
+	FVector ThurstAxis;
+
 	/**
 	  * Configure the target thrust
 	  * 1 for max trust

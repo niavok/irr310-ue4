@@ -15,6 +15,7 @@ UIrr310ShipEngine::UIrr310ShipEngine(const class FPostConstructInitializePropert
 	MaxThrust = 1000;
 	TargetThrust = 0;
 	ThrustVariationSpeed = 100;
+	ThurstAxis = FVector(0, 0, 1);
 }
 
 void UIrr310ShipEngine::TickModule(AIrr310Ship* ship, float deltaTime)
@@ -24,11 +25,11 @@ void UIrr310ShipEngine::TickModule(AIrr310Ship* ship, float deltaTime)
 	
 	// Apply thrust variation to reach target
 	if (CurrentThrust < TargetThrust) {
-		CurrentThrust += ThrustVariationSpeed;
+		CurrentThrust += ThrustVariationSpeed * deltaTime;
 	}
 	else if (CurrentThrust > TargetThrust)
 	{
-		CurrentThrust -= ThrustVariationSpeed;
+		CurrentThrust -= ThrustVariationSpeed * deltaTime;
 	}
 
 	CurrentThrust = FMath::Clamp(CurrentThrust, MinThrust, MaxThrust);
@@ -39,7 +40,7 @@ void UIrr310ShipEngine::TickModule(AIrr310Ship* ship, float deltaTime)
 	ThrustNoise.X = FMath::FRandRange(-0.01, 0.01) * CurrentThrust;
 	ThrustNoise.Y = FMath::FRandRange(-0.01, 0.01) * CurrentThrust;
 	ThrustNoise.Z = FMath::FRandRange(-0.05, 0.05) * CurrentThrust;
-	FVector LocalThrust = FVector(0, 0, CurrentThrust) + ThrustNoise * 0.1;
+	FVector LocalThrust = ThurstAxis * CurrentThrust + ThrustNoise * 1.0;
 
 	FVector WorldThrust = GetComponentToWorld().GetRotation().RotateVector(LocalThrust);
 

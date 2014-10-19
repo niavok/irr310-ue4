@@ -38,17 +38,17 @@ void AIrr310SimpleShipHUD::DrawHUD()
 		float AltitudeVariation = Ship->GetLinearSpeed().Z;
 
 		// Speed
-		FCanvasTextItem SpeedTextItem(FVector2D(HUDXRatio * 805.f, HUDYRatio * 455), FText::Format(LOCTEXT("SpeedFormat", "{0} m/s"), FText::AsNumber(Speed)), HUDFont, FLinearColor::Black);
+		FCanvasTextItem SpeedTextItem(FVector2D(HUDXRatio * 105.f, HUDYRatio * 455), FText::Format(LOCTEXT("SpeedFormat", "Speed: {0} m/s"), FText::AsNumber(Speed)), HUDFont, FLinearColor::Black);
 		SpeedTextItem.Scale = ScaleVec;
 		Canvas->DrawItem(SpeedTextItem);
 
 		// Altitude
-		FCanvasTextItem AltitudeTextItem(FVector2D(HUDXRatio * 805.f, HUDYRatio * 500), FText::Format(LOCTEXT("AltitudeFormat", "{0} m"), FText::AsNumber(Altitude)), HUDFont, FLinearColor::Black);
+		FCanvasTextItem AltitudeTextItem(FVector2D(HUDXRatio * 105.f, HUDYRatio * 500), FText::Format(LOCTEXT("AltitudeFormat", "Altitude: {0} m"), FText::AsNumber(Altitude)), HUDFont, FLinearColor::Black);
 		AltitudeTextItem.Scale = ScaleVec;
 		Canvas->DrawItem(AltitudeTextItem);
 
 		// Altitude variation
-		FCanvasTextItem AltitudeVariationTextItem(FVector2D(HUDXRatio * 805.f, HUDYRatio * 545), FText::Format(LOCTEXT("AltitudeVariationFormat", "{0} m/s"), FText::AsNumber(AltitudeVariation)), HUDFont, FLinearColor::Black);
+		FCanvasTextItem AltitudeVariationTextItem(FVector2D(HUDXRatio * 105.f, HUDYRatio * 545), FText::Format(LOCTEXT("AltitudeVariationFormat", "Alt speed: {0} m/s"), FText::AsNumber(AltitudeVariation)), HUDFont, FLinearColor::Black);
 		AltitudeVariationTextItem.Scale = ScaleVec;
 		Canvas->DrawItem(AltitudeVariationTextItem);
 
