@@ -18,6 +18,8 @@ class IRR310_API AIrr310Ship : public APawn
 public:
 	FVector GetLinearSpeed();
 
+	FVector GetLocalLinearSpeed();
+
 	float GetAltitude();
 
 	void AddForceAtLocation(FVector force, FVector applicationPoint);

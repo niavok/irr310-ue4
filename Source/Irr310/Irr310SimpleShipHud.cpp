@@ -33,12 +33,12 @@ void AIrr310SimpleShipHUD::DrawHUD()
 	{
 		FVector2D ScaleVec(HUDYRatio * 1.4f, HUDYRatio * 1.4f);
 
-		float Speed = Ship->GetLinearSpeed().Size();
+		float Speed = Ship->GetLocalLinearSpeed().X;
 		float Altitude = Ship->GetAltitude();
 		float AltitudeVariation = Ship->GetLinearSpeed().Z;
 
 		// Speed
-		FCanvasTextItem SpeedTextItem(FVector2D(HUDXRatio * 105.f, HUDYRatio * 455), FText::Format(LOCTEXT("SpeedFormat", "Speed: {0} m/s"), FText::AsNumber(Speed)), HUDFont, FLinearColor::Black);
+		FCanvasTextItem SpeedTextItem(FVector2D(HUDXRatio * 105.f, HUDYRatio * 455), FText::Format(LOCTEXT("SpeedFormat", "Forward speed: {0} m/s"), FText::AsNumber(Speed)), HUDFont, FLinearColor::Black);
 		SpeedTextItem.Scale = ScaleVec;
 		Canvas->DrawItem(SpeedTextItem);
 

@@ -34,7 +34,7 @@ public:
 	float ThrustVariationSpeed;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
-	FVector ThurstAxis;
+	FVector ThrustAxis;
 
 	/**
 	  * Configure the target thrust
