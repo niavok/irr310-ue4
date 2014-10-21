@@ -328,6 +328,10 @@ float* AIrr310Ship::ComputeAngularVelocityStabilisation(TArray<UActorComponent*>
 	
 
 	FVector AngularVelocityCommand = c->GetComponentToWorld().GetRotation().RotateVector(LocalTargetSpeed);
+
+	FVector DeltaVelocity = AngularVelocityCommand - AngularVelocity;
+	FVector DeltaVelocityDirection = DeltaVelocity;
+	DeltaVelocityDirection.Normalize();
 	FVector aim = FVector(0, 0, 0);
 	float MaxAngularSpeed = 360;
 	float SoftModeAngularLimit = 90;
@@ -349,10 +353,15 @@ float* AIrr310Ship::ComputeAngularVelocityStabilisation(TArray<UActorComponent*>
 		FVector TorqueDirection = FVector::CrossProduct(EngineOffset, WorldThurstAxis);
 		TorqueDirection.Normalize();
 
-
 		float alpha = 0;
+		float ramp = 1;
+		if (DeltaVelocity.SizeSquared() < 1) {
+			ramp = DeltaVelocity.SizeSquared();
+		}
 
-		if (FMath::Abs(TorqueDirection.X) > 0.1 && FMath::Abs(aim.X) > 0.001)
+		alpha = ramp * FVector::DotProduct(TorqueDirection, DeltaVelocityDirection);
+
+		/*if (FMath::Abs(TorqueDirection.X) > 0.1 && FMath::Abs(aim.X) > 0.001)
 		{
 			alpha += - aim.X * (TorqueDirection.X > 0 ? 1 : -1);
 		}
@@ -365,7 +374,7 @@ float* AIrr310Ship::ComputeAngularVelocityStabilisation(TArray<UActorComponent*>
 		if (FMath::Abs(TorqueDirection.Z) > 0.1 && FMath::Abs(aim.Z) > 0.001)
 		{
 			alpha += - aim.Z * (TorqueDirection.Z > 0 ? 1 : -1);
-		}
+		}*/
 
 		command[i] = alpha;
 	}
@@ -375,11 +384,11 @@ float* AIrr310Ship::ComputeAngularVelocityStabilisation(TArray<UActorComponent*>
 // Bindings
 void AIrr310Ship::OnIncreaseLinearVelocity()
 {
-	LocalLinearVelocityTarget.X += 10;
+	LocalLinearVelocityTarget.X += 0.1;
 }
 void AIrr310Ship::OnDecreaseLinearVelocity()
 {
-	LocalLinearVelocityTarget.X -= 10;
+	LocalLinearVelocityTarget.X -= 0.1;
 }
 
 void AIrr310Ship::OnKillLinearVelocity()
@@ -389,12 +398,12 @@ void AIrr310Ship::OnKillLinearVelocity()
 
 void AIrr310Ship::OnPichtCommand(float Val)
 {
-	LocalAngularVelocityTarget.Y = Val * 10;
+	LocalAngularVelocityTarget.Y = Val * 30;
 }
 
 void AIrr310Ship::OnYawCommand(float Val)
 {
-	LocalAngularVelocityTarget.Z = - Val * 10;
+	LocalAngularVelocityTarget.Z = - Val * 30;
 }
 
 
