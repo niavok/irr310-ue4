@@ -10,6 +10,7 @@ AIrr310Ship::AIrr310Ship(const class FPostConstructInitializeProperties& PCIP)
 {
 	UE_LOG(LogTemp, Warning, TEXT("new AIrr310Ship"));
 	Mass = 1000;
+	LocalLinearVelocityTarget = FVector::ZeroVector;
 	TickSumForce = FVector::ZeroVector;
 	TickSumTorque = FVector::ZeroVector;
 }
@@ -27,7 +28,38 @@ void AIrr310Ship::Tick(float deltaTime)
 		Module->TickModule(this, deltaTime);
 	}
 	
+	//Configure camera
+	if (InputComponent)
+	{
+		USpringArmComponent* InternalCamera = Cast<USpringArmComponent>(GetComponentByClass(USpringArmComponent::StaticClass()));
+		FRotator HeadRotation = InternalCamera->RelativeRotation;
+		HeadRotation.Pitch += InputComponent->GetAxisValue(LookUpBinding);
+		HeadRotation.Yaw += InputComponent->GetAxisValue(LookRightBinding);
+		InternalCamera->RelativeRotation = HeadRotation;
+	}
+
 	PhysicSubTick(deltaTime);
+
+}
+
+const FName AIrr310Ship::LookUpBinding("LookUp");
+const FName AIrr310Ship::LookRightBinding("LookRight");
+
+void AIrr310Ship::SetupPlayerInputComponent(class UInputComponent* InputComponent)
+{
+	// set up gameplay key bindings
+	check(InputComponent);
+
+	InputComponent->BindAxis("PitchCommand", this, &AIrr310Ship::OnPichtCommand);
+	InputComponent->BindAxis("YawCommand", this, &AIrr310Ship::OnYawCommand);
+	InputComponent->BindAxis(LookUpBinding);
+	InputComponent->BindAxis(LookRightBinding);
+
+	InputComponent->BindAction("IncreaseLinearVelocity", IE_Pressed, this, &AIrr310Ship::OnIncreaseLinearVelocity);
+	InputComponent->BindAction("DecreaseLinearVelocity", IE_Pressed, this, &AIrr310Ship::OnDecreaseLinearVelocity);
+	InputComponent->BindAction("KillLinearVelocity", IE_Pressed, this, &AIrr310Ship::OnKillLinearVelocity);
+
+	InputComponent->BindAction("RandomizeRotationSpeed", IE_Pressed, this, &AIrr310Ship::OnRandomizeRotationSpeed);
 
 }
 
@@ -81,6 +113,10 @@ FVector AIrr310Ship::GetLocalLinearSpeed()
 
 float AIrr310Ship::GetAltitude() {
 	return GetActorLocation().Z / 100;
+}
+
+FVector AIrr310Ship::GetLocation() {
+	return GetActorLocation() / 100;
 }
 
 // Estimators
@@ -184,20 +220,44 @@ void AIrr310Ship::AutoPilotSubTick(float deltaTime)
 {
 
 	//TODO take air resistance, gravity and levitation
-	
-	// Basic auto pilot, stabilise to 10 m/s max front velocity
-	FVector LocalTargetSpeed = FVector(20,0,0);
-	
 
+	// Basic auto pilot
 
 	UPrimitiveComponent* c = (UPrimitiveComponent*)RootComponent;
 	TArray<UActorComponent*> Engines = GetComponentsByClass(UIrr310ShipEngine::StaticClass());
 
 
-	FVector WorldTargetSpeed = c->GetComponentToWorld().GetRotation().RotateVector(LocalTargetSpeed);
+	TArray<float*> EngineCommands;
 
-	FVector WorldVelocity = GetLinearSpeed();
 	
+	EngineCommands.Add(ComputeLinearVelocityStabilisation(Engines, LocalLinearVelocityTarget));
+	EngineCommands.Add(ComputeAngularVelocityStabilisation(Engines, LocalAngularVelocityTarget));
+
+
+
+	for (int32 EngineIndex = 0; EngineIndex < Engines.Num(); EngineIndex++) {
+		float ThrustRatio = 0;
+		for (int32 CommandIndex = 0; CommandIndex < EngineCommands.Num(); CommandIndex++) {
+			ThrustRatio += EngineCommands[CommandIndex][EngineIndex];
+		}
+		UIrr310ShipEngine* Engine = Cast<UIrr310ShipEngine>(Engines[EngineIndex]);
+		Engine->SetTargetThrustRatio(ThrustRatio);
+	}
+
+	//Clear
+	for (int32 CommandIndex = 0; CommandIndex < EngineCommands.Num(); CommandIndex++) {
+		delete[] EngineCommands[CommandIndex];
+	}
+
+}
+
+float* AIrr310Ship::ComputeLinearVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed)
+{
+
+	UPrimitiveComponent* c = (UPrimitiveComponent*)RootComponent;
+	FVector WorldTargetSpeed = c->GetComponentToWorld().GetRotation().RotateVector(LocalTargetSpeed);
+	FVector WorldVelocity = GetLinearSpeed();
+
 
 
 	// Compute the equilibrium Thrust: Target Air Resistance = Total Thurst
@@ -205,19 +265,19 @@ void AIrr310Ship::AutoPilotSubTick(float deltaTime)
 	float A = 1 * 0.5;
 	FVector TargetAirResistance = computeAngularAirResistance(WorldTargetSpeed, Ro, A);
 	FVector CurrentAirResistance = computeAngularAirResistance(WorldVelocity, Ro, A);
-	
+
 	FVector TotalMaxThrust = getTotalMaxThrust(Engines);
 	float FinalThurstRatio = TargetAirResistance.Size() / TotalMaxThrust.Size();
-		
+
 
 
 	//float timeToMatch = getMatchThurstDuration(Engines, TargetAirResistance);
-	
+
 
 	// Compute time to get this trust
 	FVector WorldVelocityToEnginesStop = GetLinearSpeed();
-	
-	
+
+
 	FVector LocalVelocityToEnginesStop = c->GetComponentToWorld().GetRotation().Inverse().RotateVector(WorldVelocityToEnginesStop);
 
 	float ThrustCommand = 0;
@@ -225,9 +285,11 @@ void AIrr310Ship::AutoPilotSubTick(float deltaTime)
 
 	if (LocalVelocityToEnginesStop.X > LocalTargetSpeed.X + 0.5) {
 		ThrustCommand = 0;
-	} else if (LocalVelocityToEnginesStop.X > LocalTargetSpeed.X) {
+	}
+	else if (LocalVelocityToEnginesStop.X > LocalTargetSpeed.X) {
 		ThrustCommand = FinalThurstRatio;
-	} else {
+	}
+	else {
 		WorldVelocityToEnginesStop += getDeltaVToEnginesRatio(Engines, Mass, FinalThurstRatio);
 		// Check if air resistant won't make the estimation optimist.
 		WorldVelocityToEnginesStop += getEnginesToRatioDuration(Engines, FinalThurstRatio) * CurrentAirResistance / Mass; // Assusme the air resistance will be almost constant during all the process. It's wrong, but it's better than noting
@@ -239,35 +301,42 @@ void AIrr310Ship::AutoPilotSubTick(float deltaTime)
 
 		if (LocalVelocityToEnginesStop.X < LocalTargetSpeed.X - 0.5) {
 			ThrustCommand = 1;
-		} else if (LocalVelocityToEnginesStop.X < LocalTargetSpeed.X) {
+		}
+		else if (LocalVelocityToEnginesStop.X < LocalTargetSpeed.X) {
 			ThrustCommand = (1 - 2 * (LocalTargetSpeed.X - LocalVelocityToEnginesStop.X)) * FinalThurstRatio + 2 * (LocalTargetSpeed.X - LocalVelocityToEnginesStop.X);
-		} else {
+		}
+		else {
 			ThrustCommand = FinalThurstRatio;
 		}
 	}
 
-	
+	float* command = new float[Engines.Num()];
 	for (int32 i = 0; i < Engines.Num(); i++) {
-		UIrr310ShipEngine* Engine = Cast<UIrr310ShipEngine>(Engines[i]);
-		Engine->SetTargetThrustRatio(ThrustCommand);
+		command[i] = ThrustCommand;
 	}
+	return command;
+}
 
+
+float* AIrr310Ship::ComputeAngularVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed)
+{
+	UPrimitiveComponent* c = (UPrimitiveComponent*)RootComponent;
 	FVector COM = c->GetBodyInstance()->GetCOMPosition();
 
 	// Simple kill rot
 	FVector AngularVelocity = c->GetPhysicsAngularVelocity();
 	
 
-	FVector AngularVelocityCommand = FVector(0, 0, 0);
+	FVector AngularVelocityCommand = c->GetComponentToWorld().GetRotation().RotateVector(LocalTargetSpeed);
 	FVector aim = FVector(0, 0, 0);
 	float MaxAngularSpeed = 360;
-	float SoftModeAngularLimit = 2;
+	float SoftModeAngularLimit = 90;
 
 	aim.X = computeSoftAngularCommand(AngularVelocity.X, MaxAngularSpeed, SoftModeAngularLimit, AngularVelocityCommand.X);
 	aim.Y = computeSoftAngularCommand(AngularVelocity.Y, MaxAngularSpeed, SoftModeAngularLimit, AngularVelocityCommand.Y);
 	aim.Z = computeSoftAngularCommand(AngularVelocity.Z, MaxAngularSpeed, SoftModeAngularLimit, AngularVelocityCommand.Z);
 
-
+	float* command = new float[Engines.Num()];
 	for (int32 i = 0; i < Engines.Num(); i++) {
 		UIrr310ShipEngine* Engine = Cast<UIrr310ShipEngine>(Engines[i]);
 
@@ -280,32 +349,74 @@ void AIrr310Ship::AutoPilotSubTick(float deltaTime)
 		FVector TorqueDirection = FVector::CrossProduct(EngineOffset, WorldThurstAxis);
 		TorqueDirection.Normalize();
 
+
 		float alpha = 0;
 
 		if (FMath::Abs(TorqueDirection.X) > 0.1 && FMath::Abs(aim.X) > 0.001)
 		{
-			alpha += (Engine->MaxThrust - Engine->MinThrust) * aim.X * (TorqueDirection.X > 0 ? 1 : -1);
+			alpha += - aim.X * (TorqueDirection.X > 0 ? 1 : -1);
 		}
 
 		if (FMath::Abs(TorqueDirection.Y) > 0.1 && FMath::Abs(aim.Y) > 0.001)
 		{
-			alpha += (Engine->MaxThrust - Engine->MinThrust) * aim.Y * (TorqueDirection.Y > 0 ? 1 : -1);
+			alpha += - aim.Y * (TorqueDirection.Y > 0 ? 1 : -1);
 		}
 
 		if (FMath::Abs(TorqueDirection.Z) > 0.1 && FMath::Abs(aim.Z) > 0.001)
 		{
-			alpha += (Engine->MaxThrust - Engine->MinThrust) * aim.Z * (TorqueDirection.Z > 0 ? 1 : -1);
+			alpha += - aim.Z * (TorqueDirection.Z > 0 ? 1 : -1);
 		}
 
-		Engine->TargetThrust = Engine->TargetThrust - alpha;
+		command[i] = alpha;
 	}
+	return command;
+}
 
+// Bindings
+void AIrr310Ship::OnIncreaseLinearVelocity()
+{
+	LocalLinearVelocityTarget.X += 10;
+}
+void AIrr310Ship::OnDecreaseLinearVelocity()
+{
+	LocalLinearVelocityTarget.X -= 10;
+}
 
+void AIrr310Ship::OnKillLinearVelocity()
+{
+	LocalLinearVelocityTarget.X = 0;
+}
 
+void AIrr310Ship::OnPichtCommand(float Val)
+{
+	LocalAngularVelocityTarget.Y = Val * 10;
+}
 
+void AIrr310Ship::OnYawCommand(float Val)
+{
+	LocalAngularVelocityTarget.Z = - Val * 10;
 }
 
 
+void AIrr310Ship::OnRandomizeRotationSpeed()
+{
+	UPrimitiveComponent* c = (UPrimitiveComponent*)RootComponent;
+
+	FVector randomAngularVelocity = FVector(FMath::FRandRange(-360, 360), FMath::FRandRange(-360, 360), FMath::FRandRange(-360, 360));
+	c->SetPhysicsAngularVelocity(randomAngularVelocity, false);
+}
+
+FVector AIrr310Ship::getLocalAngularVelocity()
+{
+	UPrimitiveComponent* c = (UPrimitiveComponent*)RootComponent;
+	return c->GetComponentToWorld().GetRotation().Inverse().RotateVector(c->GetPhysicsAngularVelocity());
+}
+
+FVector AIrr310Ship::getWorldAngularVelocity()
+{
+	UPrimitiveComponent* c = (UPrimitiveComponent*)RootComponent;
+	return c->GetPhysicsAngularVelocity();
+}
 
 
 

@@ -14,7 +14,7 @@ UIrr310ShipEngine::UIrr310ShipEngine(const class FPostConstructInitializePropert
 	MinThrust = 0;
 	MaxThrust = 1000;
 	TargetThrust = 0;
-	ThrustVariationSpeed = 100;
+	ThrustVariationSpeed = 10000;
 	ThrustAxis = FVector(0, 0, 1);
 }
 

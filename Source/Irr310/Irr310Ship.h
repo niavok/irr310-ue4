@@ -15,6 +15,8 @@ class IRR310_API AIrr310Ship : public APawn
 
 	virtual void Tick(float deltaTime) override;
 	
+	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
+
 public:
 	FVector GetLinearSpeed();
 
@@ -22,13 +24,28 @@ public:
 
 	float GetAltitude();
 
+	FVector GetLocation();
+
+	FVector getLocalAngularVelocity();
+
+	FVector getWorldAngularVelocity();
+
 	void AddForceAtLocation(FVector force, FVector applicationPoint);
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
+		float Mass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310AutoPilot)
+		FVector LocalLinearVelocityTarget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310AutoPilot)
+		FVector LocalAngularVelocityTarget;
+
+	static const FName LookUpBinding;
+	static const FName LookRightBinding;
+
 private:
-
-	UPROPERTY(EditDefaultsOnly, Category = Irr310Physics)	
-	float Mass;
-
+	
 
 	FVector TickSumForce;
 	FVector TickSumTorque;
@@ -36,4 +53,15 @@ private:
 	void PhysicSubTick(float deltaTime);
 	
 	void AutoPilotSubTick(float deltaTime);
+
+	float* AIrr310Ship::ComputeLinearVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
+	float* AIrr310Ship::ComputeAngularVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
+
+	// Actions
+	void OnIncreaseLinearVelocity();
+	void OnDecreaseLinearVelocity();
+	void OnKillLinearVelocity();
+	void OnRandomizeRotationSpeed();
+	void OnPichtCommand(float Val);
+	void OnYawCommand(float Val);
 };

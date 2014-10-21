@@ -16,6 +16,7 @@ AIrr310SimpleShipHUD::AIrr310SimpleShipHUD(const class FPostConstructInitializeP
 {
 	static ConstructorHelpers::FObjectFinder<UFont> Font(TEXT("/Engine/EngineFonts/RobotoDistanceField"));
 	HUDFont = Font.Object;
+	//HUDFont->Set
 	UE_LOG(LogTemp, Warning, TEXT("new AIrr310SimpleShipHUD"));
 }
 
@@ -31,27 +32,85 @@ void AIrr310SimpleShipHUD::DrawHUD()
 	AIrr310Ship* Ship = Cast<AIrr310Ship>(GetOwningPawn());
 	if (Ship != nullptr)
 	{
-		FVector2D ScaleVec(HUDYRatio * 1.4f, HUDYRatio * 1.4f);
+		FVector2D ScaleVec(HUDYRatio * 0.7f, HUDYRatio * 0.7f);
 
-		float Speed = Ship->GetLocalLinearSpeed().X;
-		float Altitude = Ship->GetAltitude();
-		float AltitudeVariation = Ship->GetLinearSpeed().Z;
+		FVector Speed = Ship->GetLocalLinearSpeed();
+		FVector WorldSpeed = Ship->GetLinearSpeed();
+		FVector Location = Ship->GetLocation();
+		FVector LocalLinearVelocityTarget = Ship->LocalLinearVelocityTarget;
+		FVector LocalAngularVelocityTarget = Ship->LocalAngularVelocityTarget;
+		
+		FRotator WorldRotation = Ship->GetActorRotation();
+		
+		FVector LocalAngularVelocity = Ship->getLocalAngularVelocity();
+		FVector WorldAngularVelocity = Ship->getWorldAngularVelocity();
 
-		// Speed
-		FCanvasTextItem SpeedTextItem(FVector2D(HUDXRatio * 105.f, HUDYRatio * 455), FText::Format(LOCTEXT("SpeedFormat", "Forward speed: {0} m/s"), FText::AsNumber(Speed)), HUDFont, FLinearColor::Black);
-		SpeedTextItem.Scale = ScaleVec;
-		Canvas->DrawItem(SpeedTextItem);
+		float leftMargin = 50;
+		float line = 455;
+		float lineHeight = 20;
 
-		// Altitude
-		FCanvasTextItem AltitudeTextItem(FVector2D(HUDXRatio * 105.f, HUDYRatio * 500), FText::Format(LOCTEXT("AltitudeFormat", "Altitude: {0} m"), FText::AsNumber(Altitude)), HUDFont, FLinearColor::Black);
+		// Target Speed
+		FCanvasTextItem TargetLinearSpeedTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
+			FText::Format(LOCTEXT("SpeedFormat", "Target local speed: X = {0} m/s,Y = {1} m/s,Z = {2} m/s"),
+			FText::AsNumber(LocalLinearVelocityTarget.X), FText::AsNumber(LocalLinearVelocityTarget.Y), FText::AsNumber(LocalLinearVelocityTarget.Z)),
+			HUDFont, FLinearColor::Black);
+		TargetLinearSpeedTextItem.Scale = ScaleVec;
+		Canvas->DrawItem(TargetLinearSpeedTextItem);
+		line += lineHeight;
+
+		// Target Angular Speed
+		FCanvasTextItem TargetAngularSpeedTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
+			FText::Format(LOCTEXT("SpeedFormat", "Target local angular speed: Roll = {0} °/s, Pitch = {1} °/s, Yaw = {2} °/s"),
+			FText::AsNumber(LocalAngularVelocityTarget.X), FText::AsNumber(LocalAngularVelocityTarget.Y), FText::AsNumber(LocalAngularVelocityTarget.Z)),
+			HUDFont, FLinearColor::Black);
+		TargetAngularSpeedTextItem.Scale = ScaleVec;
+		Canvas->DrawItem(TargetAngularSpeedTextItem);
+		line += lineHeight;
+
+		// Local Speed
+		FCanvasTextItem LinearSpeedTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
+			FText::Format(LOCTEXT("SpeedFormat", "Local speed: X = {0} m/s, Y = {1} m/s, Z = {2} m/s"),
+			FText::AsNumber(Speed.X), FText::AsNumber(Speed.Y), FText::AsNumber(Speed.Z)),
+			HUDFont, FLinearColor::Black);
+		LinearSpeedTextItem.Scale = ScaleVec;
+		Canvas->DrawItem(LinearSpeedTextItem);
+		line += lineHeight;
+
+		// Local Rotation Speed
+		FCanvasTextItem LocalAngularSpeedTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
+			FText::Format(LOCTEXT("SpeedFormat", "Local angular speed: Roll = {0} °/s, Pitch = {1} °/s, Yaw = {2} °/s"),
+			FText::AsNumber(LocalAngularVelocity.X), FText::AsNumber(LocalAngularVelocity.Y), FText::AsNumber(LocalAngularVelocity.Z)),
+			HUDFont, FLinearColor::Black);
+		LocalAngularSpeedTextItem.Scale = ScaleVec;
+		Canvas->DrawItem(LocalAngularSpeedTextItem);
+		line += lineHeight;
+
+		// Location
+		FCanvasTextItem AltitudeTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
+			FText::Format(LOCTEXT("AltitudeFormat", "Location: X = {0} m, Y = {1} m, Altitude: {2} m"),
+			FText::AsNumber(Location.X), FText::AsNumber(Location.Y), FText::AsNumber(Location.Z)),
+			HUDFont, FLinearColor::Black);
 		AltitudeTextItem.Scale = ScaleVec;
 		Canvas->DrawItem(AltitudeTextItem);
+		line += lineHeight;
 
-		// Altitude variation
-		FCanvasTextItem AltitudeVariationTextItem(FVector2D(HUDXRatio * 105.f, HUDYRatio * 545), FText::Format(LOCTEXT("AltitudeVariationFormat", "Alt speed: {0} m/s"), FText::AsNumber(AltitudeVariation)), HUDFont, FLinearColor::Black);
-		AltitudeVariationTextItem.Scale = ScaleVec;
-		Canvas->DrawItem(AltitudeVariationTextItem);
+		// World Rotation
+		FCanvasTextItem WorldRotationTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
+			FText::Format(LOCTEXT("SpeedFormat", "World rotation: Roll = {0} °, Pitch = {1} °, Yaw = {2} °"),
+			FText::AsNumber(WorldRotation.Roll), FText::AsNumber(WorldRotation.Pitch), FText::AsNumber(WorldRotation.Yaw)),
+			HUDFont, FLinearColor::Black);
+		WorldRotationTextItem.Scale = ScaleVec;
+		Canvas->DrawItem(WorldRotationTextItem);
+		line += lineHeight;
 
+		// World Rotation Speed
+		FCanvasTextItem WorldAngularSpeedTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
+			FText::Format(LOCTEXT("SpeedFormat", "World angular speed: Roll = {0} °/s, Pitch = {1} °/s, Yaw = {2} °/s"),
+			FText::AsNumber(WorldAngularVelocity.X), FText::AsNumber(WorldAngularVelocity.Y), FText::AsNumber(WorldAngularVelocity.Z)),
+			HUDFont, FLinearColor::Black);
+		WorldAngularSpeedTextItem.Scale = ScaleVec;
+		Canvas->DrawItem(WorldAngularSpeedTextItem);
+		line += lineHeight;
 	
 	}
 }
