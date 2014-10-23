@@ -94,6 +94,15 @@ void AIrr310SimpleShipHUD::DrawHUD()
 		Canvas->DrawItem(AltitudeTextItem);
 		line += lineHeight;
 
+		// World Speed
+		FCanvasTextItem LinearWorldSpeedTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
+			FText::Format(LOCTEXT("SpeedFormat", "World speed: X = {0} m/s, Y = {1} m/s, Z = {2} m/s"),
+			FText::AsNumber(WorldSpeed.X), FText::AsNumber(WorldSpeed.Y), FText::AsNumber(WorldSpeed.Z)),
+			HUDFont, FLinearColor::Black);
+		LinearWorldSpeedTextItem.Scale = ScaleVec;
+		Canvas->DrawItem(LinearWorldSpeedTextItem);
+		line += lineHeight;
+
 		// World Rotation
 		FCanvasTextItem WorldRotationTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
 			FText::Format(LOCTEXT("SpeedFormat", "World rotation: Roll = {0} °, Pitch = {1} °, Yaw = {2} °"),

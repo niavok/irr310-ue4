@@ -125,6 +125,7 @@ static FVector getDeltaVToEngineRatio(UIrr310ShipEngine* Engine, float Mass, flo
 static float getEnginesToRatioDuration(TArray<UActorComponent*>& Engines, float ThrustRatio);
 static float getEngineToRatioDuration(UIrr310ShipEngine* Engines, float ThrustRatio);
 static FVector getTotalMaxThrust(TArray<UActorComponent*>& Engines);
+static FVector getTotalMaxLocalThrust(UPrimitiveComponent* root, TArray<UActorComponent*>& Engines);
 // Tools
 static float computeSoftAngularCommand(float measure, float mMaxAngularSpeed, float mSoftModeAngularLimit, float command);
 static FVector computeAngularAirResistance(FVector velocity, float Ro, float A);
@@ -229,10 +230,19 @@ void AIrr310Ship::AutoPilotSubTick(float deltaTime)
 
 	TArray<float*> EngineCommands;
 
-	
-	EngineCommands.Add(ComputeLinearVelocityStabilisation(Engines, LocalLinearVelocityTarget));
-	EngineCommands.Add(ComputeAngularVelocityStabilisation(Engines, LocalAngularVelocityTarget));
 
+	// Keep head up
+	//EngineCommands.Add(ComputeAngularControl(Engines, FVector(0, 0, 1), FVector(0, 0, 1)));
+	
+	//EngineCommands.Add(ComputeAngularControl(Engines, FVector(1, 0, 0), FVector(1,0,0)));
+	
+	//EngineCommands.Add(ComputePositionWithRotationControl(Engines, FVector(0, 0, 0), LocalLinearVelocityTarget.Size()));
+
+	
+	//EngineCommands.Add(ComputeLinearVelocityStabilisation(Engines, LocalLinearVelocityTarget));
+	//EngineCommands.Add(ComputeAngularVelocityStabilisation(Engines, LocalAngularVelocityTarget));
+
+	EngineCommands.Add(ComputeLinearVelocityStabilisation(Engines, LocalLinearVelocityTarget));
 
 
 	for (int32 EngineIndex = 0; EngineIndex < Engines.Num(); EngineIndex++) {
@@ -296,7 +306,7 @@ float* AIrr310Ship::ComputeLinearVelocityStabilisation(TArray<UActorComponent*>&
 
 		LocalVelocityToEnginesStop = c->GetComponentToWorld().GetRotation().Inverse().RotateVector(WorldVelocityToEnginesStop);
 
-
+		// TODO use also gravity and levitation
 
 
 		if (LocalVelocityToEnginesStop.X < LocalTargetSpeed.X - 0.5) {
@@ -381,14 +391,119 @@ float* AIrr310Ship::ComputeAngularVelocityStabilisation(TArray<UActorComponent*>
 	return command;
 }
 
+/**
+ * Align LocalShipAxis to TargetAxis
+ */
+float* AIrr310Ship::ComputeAngularControl(TArray<UActorComponent*>& Engines, FVector LocalShipAxis, FVector TargetAxis)
+{
+	UPrimitiveComponent* c = (UPrimitiveComponent*)RootComponent;
+	FVector WorldShipAxis = c->GetComponentToWorld().GetRotation().RotateVector(LocalShipAxis);
+
+	WorldShipAxis.Normalize();
+	TargetAxis.Normalize();
+
+	float dot = FVector::DotProduct(WorldShipAxis, TargetAxis);
+
+
+
+	FVector RotationDirection = FVector::CrossProduct(WorldShipAxis, TargetAxis);
+
+	if (dot < 0) {
+		//Invert and maximize
+		if (RotationDirection.Size() == 0) {
+			RotationDirection = FVector(1, 1, 1) - TargetAxis;
+			
+		}
+		//RotationDirection *= -1;
+		RotationDirection.Normalize();
+	}
+
+	/*
+	// Soften the end only
+	RotationDirection.X = FMath::Pow(RotationDirection.X,3);
+	RotationDirection.Y = FMath::Pow(RotationDirection.Y, 3);
+	RotationDirection.Z = FMath::Pow(RotationDirection.Z, 3);
+	*/
+
+	RotationDirection *= 30;
+
+	RotationDirection.ClampMaxSize(20);
+
+	
+	//TODO Improve
+
+
+	// Check what is the faster angle is 
+
+	// TODO Evaluate if and intermediate rotation help
+
+	// TODO pass ComputeAngularVelocityStabilisation in world space
+	FVector WorldRotationDirection = c->GetComponentToWorld().GetRotation().Inverse().RotateVector(RotationDirection);
+
+	return ComputeAngularVelocityStabilisation(Engines, WorldRotationDirection);
+
+}
+
+float* AIrr310Ship::ComputePositionWithoutRotationControl(TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed) {
+	UPrimitiveComponent* c = (UPrimitiveComponent*)RootComponent;
+	FVector DeltaPosition = TargetLocation - c->GetComponentLocation();
+	FVector Speed = DeltaPosition;
+	Speed.Normalize();
+	//TODO find max speed
+	
+	
+
+
+	Speed *= speed;
+
+	// TODO pass ComputeLinearVelocityStabilisation in world space
+	FVector LocalSpeed = c->GetComponentToWorld().GetRotation().Inverse().RotateVector(Speed);
+
+	return ComputeLinearVelocityStabilisation(Engines, LocalSpeed);
+}
+
+float* AIrr310Ship::ComputePositionWithRotationControl(TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed) {
+	
+	UPrimitiveComponent* c = (UPrimitiveComponent*)RootComponent;
+	FVector TargetDirection = TargetLocation - c->GetComponentLocation();
+	TargetDirection.Normalize();
+
+	FVector LocalMaxThrustDirection = getTotalMaxLocalThrust(c, Engines);
+	LocalMaxThrustDirection.Normalize();
+
+	FVector MaxThrustDirection = getTotalMaxThrust(Engines);
+	MaxThrustDirection.Normalize();
+
+	float dot = FVector::DotProduct(TargetDirection, MaxThrustDirection);
+	dot = FMath::Clamp(dot, 0.0f, 1.0f);
+	dot = FMath::Square(dot);
+
+
+	float* angularCommand = ComputeAngularControl(Engines, LocalMaxThrustDirection, TargetDirection);
+	float* positionCommand = ComputePositionWithoutRotationControl(Engines, TargetLocation, speed * dot);
+	
+	// Merge
+	float* command = new float[Engines.Num()];
+	for (int32 i = 0; i < Engines.Num(); i++) {
+		command[i] = angularCommand[i] + positionCommand[i];
+	}
+
+	delete[] angularCommand;
+	delete[] positionCommand;
+
+	return command;
+}
+
+
+
 // Bindings
 void AIrr310Ship::OnIncreaseLinearVelocity()
 {
-	LocalLinearVelocityTarget.X += 0.1;
+	LocalLinearVelocityTarget.X += 5;
 }
 void AIrr310Ship::OnDecreaseLinearVelocity()
 {
-	LocalLinearVelocityTarget.X -= 0.1;
+	LocalLinearVelocityTarget.X -= 5;
 }
 
 void AIrr310Ship::OnKillLinearVelocity()
@@ -480,6 +595,10 @@ static FVector getTotalMaxThrust(TArray<UActorComponent*>& Engines) {
 	}
 
 	return TotalMaxThrust;
+}
+
+static FVector getTotalMaxLocalThrust(UPrimitiveComponent* root, TArray<UActorComponent*>& Engines) {
+	return  root->GetComponentToWorld().GetRotation().Inverse().RotateVector(getTotalMaxThrust(Engines));
 }
 
 /*static float getMatchThurstDuration(TArray<UActorComponent*>& Engines,FVector TargetAirResistance) {

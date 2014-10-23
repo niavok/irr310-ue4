@@ -54,8 +54,14 @@ private:
 	
 	void AutoPilotSubTick(float deltaTime);
 
-	float* AIrr310Ship::ComputeLinearVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
-	float* AIrr310Ship::ComputeAngularVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
+	float* ComputeLinearVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
+	float* ComputeAngularVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
+
+	float* ComputeAngularControl(TArray<UActorComponent*>& Engines, FVector LocalShipAxis, FVector TargetAxis);
+	float* ComputePositionWithoutRotationControl(TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed);
+	float* ComputePositionWithRotationControl(TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed);
+	
+
 
 	// Actions
 	void OnIncreaseLinearVelocity();
