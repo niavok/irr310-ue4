@@ -41,6 +41,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310AutoPilot)
 		FVector LocalAngularVelocityTarget;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Irr310AutoPilot)
+		FVector LocationTarget;
+
 	static const FName LookUpBinding;
 	static const FName LookRightBinding;
 
@@ -55,7 +58,10 @@ private:
 	void AutoPilotSubTick(float deltaTime);
 
 	float* ComputeLinearVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
+	float* ComputeLinearVelocityStabilisationWithRotation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
+	
 	float* ComputeAngularVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
+
 
 	float* ComputeAngularControl(TArray<UActorComponent*>& Engines, FVector LocalShipAxis, FVector TargetAxis);
 	float* ComputePositionWithoutRotationControl(TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed);

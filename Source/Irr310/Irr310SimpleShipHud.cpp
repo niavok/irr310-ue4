@@ -45,9 +45,21 @@ void AIrr310SimpleShipHUD::DrawHUD()
 		FVector LocalAngularVelocity = Ship->getLocalAngularVelocity();
 		FVector WorldAngularVelocity = Ship->getWorldAngularVelocity();
 
+		FVector LocationTarget = Ship->LocationTarget;
+
 		float leftMargin = 50;
 		float line = 455;
 		float lineHeight = 20;
+
+
+		// Target Speed
+		FCanvasTextItem TargetPositionTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
+			FText::Format(LOCTEXT("SpeedFormat", "Target location: X = {0} m,Y = {1} m,Z = {2} m"),
+			FText::AsNumber(LocationTarget.X), FText::AsNumber(LocationTarget.Y), FText::AsNumber(LocationTarget.Z)),
+			HUDFont, FLinearColor::Black);
+		TargetPositionTextItem.Scale = ScaleVec;
+		Canvas->DrawItem(TargetPositionTextItem);
+		line += lineHeight;
 
 		// Target Speed
 		FCanvasTextItem TargetLinearSpeedTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
