@@ -485,7 +485,7 @@ float* AIrr310Ship::ComputeLinearVelocityStabilisationWithRotation(TArray<UActor
 	float* positionCommand;
 
 	float rotationNeed = FMath::Clamp(DeltatSpeed.Size() / 5, 0.1f, 0.8f);
-	UE_LOG(LogTemp, Warning, TEXT("3 - rotationNeed: %f"), rotationNeed);
+	//UE_LOG(LogTemp, Warning, TEXT("3 - rotationNeed: %f"), rotationNeed);
 	//if (DeltatSpeed.Size() > 0) {
 		angularCommand = ComputeAngularControl(Engines, LocalMaxThrustDirection, DeltaSpeedDirection);
 		positionCommand = ComputeLinearVelocityStabilisation(Engines, WorldTargetSpeed, 0.0);
@@ -822,9 +822,9 @@ float* AIrr310Ship::ComputePositionWithRotationControl(TArray<UActorComponent*>&
 		TargetSpeed = CorrectSpeed * ParasiteSpeed.Size()/5 + Speed * (5 - ParasiteSpeed.Size()) /5 * speed;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("3 - CorrectSpeed: %s"), *CorrectSpeed.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("3 - ParasiteSpeed: %s"), *ParasiteSpeed.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("3 - TargetSpeed: %s"), *TargetSpeed.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("3 - CorrectSpeed: %s"), *CorrectSpeed.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("3 - ParasiteSpeed: %s"), *ParasiteSpeed.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("3 - TargetSpeed: %s"), *TargetSpeed.ToString());
 
 
 	//FVector ParasiteSpeed = DeltatSpeed.ProjectOnTo(Speed);
