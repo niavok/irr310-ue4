@@ -199,7 +199,7 @@ void AIrr310Ship::PhysicSubTick(float deltaTime)
 	FVector AngularVelocityDirection = c->GetPhysicsAngularVelocity();
 	AngularVelocityDirection.Normalize();
 
-	FVector AngularAirResistance = -AngularVelocityDirection * 0.5f * Ro * SquareAngularVelocity;
+	FVector AngularAirResistance = -AngularVelocityDirection * 0.1f * Ro * SquareAngularVelocity;
 
 
 	FVector AngularAcceleration = FVector(0);
@@ -315,7 +315,7 @@ float* AIrr310Ship::ComputeLinearVelocityStabilisation(TArray<UActorComponent*>&
 	} else {
 		// Find total thurst in limit in the axis of FinalThrust
 		FVector TotalMaxThrust = getTotalMaxThrustInAxis(Engines, FinalThurst, ThrustAngleLimit);
-		FinalThurstRatioVector = FinalThurst / TotalMaxThrust;
+		FinalThurstRatioVector = FinalThurst / TotalMaxThrust * TotalMaxThrust.GetSignVector();
 	}
 
 	
@@ -484,7 +484,7 @@ float* AIrr310Ship::ComputeLinearVelocityStabilisationWithRotation(TArray<UActor
 	float* angularCommand;
 	float* positionCommand;
 
-	float rotationNeed = FMath::Clamp(DeltatSpeed.Size() / 5, 0.1f, 0.8f);
+	float rotationNeed = FMath::Clamp(DeltatSpeed.Size() / 2, 0.01f, 1.0f);
 	//UE_LOG(LogTemp, Warning, TEXT("3 - rotationNeed: %f"), rotationNeed);
 	//if (DeltatSpeed.Size() > 0) {
 		angularCommand = ComputeAngularControl(Engines, LocalMaxThrustDirection, DeltaSpeedDirection);
@@ -492,13 +492,13 @@ float* AIrr310Ship::ComputeLinearVelocityStabilisationWithRotation(TArray<UActor
 
 		dot = FVector::DotProduct(DeltaSpeedDirection, MaxThrustDirection);
 		//dot = FMath::Clamp(dot, 0.0f, 1.0f);
-		if (dot < 0.99) {
+		if (dot < 0.9) {
 			dot = 0;
 		}
 		else {
-			dot = (dot - 0.99) * 100;
+			dot = (dot - 0.9) * 10;
 		}
-		dot = 1;
+		//dot = 1;
 
 	/*} else {
 		angularCommand = new float[Engines.Num()];
@@ -508,11 +508,14 @@ float* AIrr310Ship::ComputeLinearVelocityStabilisationWithRotation(TArray<UActor
 		positionCommand = ComputeLinearVelocityStabilisation(Engines, WorldTargetSpeed, 0.5);
 	}*/
 	
+		rotationNeed = FMath::Min(rotationNeed, 1- dot);
+			 
+
 
 	// Merge
 	float* command = new float[Engines.Num()];
 	for (int32 i = 0; i < Engines.Num(); i++) {
-		command[i] = angularCommand[i] * rotationNeed + positionCommand[i] * (1 - rotationNeed/2);
+		command[i] = angularCommand[i] * rotationNeed + positionCommand[i] * (0.01 + 1 - rotationNeed);
 	}
 
 	delete[] angularCommand;
@@ -632,10 +635,18 @@ float* AIrr310Ship::ComputeAngularVelocityStabilisation(TArray<UActorComponent*>
 
 		FVector WorldThurstAxis = Engine->GetComponentToWorld().GetRotation().RotateVector(Engine->ThrustAxis);
 		FVector TorqueDirection = FVector::CrossProduct(EngineOffset, WorldThurstAxis);
-		TorqueDirection.Normalize();
 
+		float DeltaSpeedInTorqueAxis;
 
-		float DeltaSpeedInTorqueAxis = FVector::DotProduct(TorqueDirection, DeltaVelocity);
+		if (TorqueDirection.Size() < 0.001) {
+			DeltaSpeedInTorqueAxis = 0;
+		}
+		else {
+
+			TorqueDirection.Normalize();
+
+			float DeltaSpeedInTorqueAxis = FVector::DotProduct(TorqueDirection, DeltaVelocity);
+		}
 
 		float FinalThurstRatio = 0; //TODO
 		float FinalThurstDot = 0; //TODO
@@ -717,9 +728,9 @@ float* AIrr310Ship::ComputeAngularControl(TArray<UActorComponent*>& Engines, FVe
 	RotationDirection.Z = FMath::Pow(RotationDirection.Z, 3);
 	*/
 
-	RotationDirection *= 30;
+	RotationDirection *= 180;
 
-	RotationDirection.ClampMaxSize(20);
+	RotationDirection.ClampMaxSize(360);
 
 	
 	//TODO Improve
@@ -738,8 +749,8 @@ float* AIrr310Ship::ComputeAngularControl(TArray<UActorComponent*>& Engines, FVe
 	float* command = new float[Engines.Num()];
 
 	float soft = 1;
-	if (dot > 0.99) {
-		soft = 1 - (dot - 0.99) * 100;
+	if (dot > 0.90) {
+		soft = 1 - (dot - 0.90) * 10;
 	}
 
 	for (int32 i = 0; i < Engines.Num(); i++) {
