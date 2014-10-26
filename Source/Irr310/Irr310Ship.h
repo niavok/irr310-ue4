@@ -33,7 +33,10 @@ public:
 	void AddForceAtLocation(FVector force, FVector applicationPoint);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
-		float Mass;
+	float Mass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
+	float InertiaTensor;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310AutoPilot)
 		FVector LocalLinearVelocityTarget;
@@ -57,7 +60,7 @@ private:
 	
 	void AutoPilotSubTick(float deltaTime);
 
-	float* ComputeLinearVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
+	float* ComputeLinearVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed, float ThrustAngleLimit);
 	float* ComputeLinearVelocityStabilisationWithRotation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
 	
 	float* ComputeAngularVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);

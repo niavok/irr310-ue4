@@ -26,10 +26,12 @@ void UIrr310ShipEngine::TickModule(AIrr310Ship* ship, float deltaTime)
 	// Apply thrust variation to reach target
 	if (CurrentThrust < TargetThrust) {
 		CurrentThrust += ThrustVariationSpeed * deltaTime;
+		CurrentThrust = FMath::Min(CurrentThrust, TargetThrust);
 	}
 	else if (CurrentThrust > TargetThrust)
 	{
 		CurrentThrust -= ThrustVariationSpeed * deltaTime;
+		CurrentThrust = FMath::Max(CurrentThrust, TargetThrust);
 	}
 
 	CurrentThrust = FMath::Clamp(CurrentThrust, MinThrust, MaxThrust);
