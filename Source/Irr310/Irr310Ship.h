@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/Pawn.h"
+#include "Irr310BlackBox.h"
 #include "Irr310Ship.generated.h"
 
 /**
@@ -34,24 +35,31 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
 	float Mass;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
+	FVector LocalCOM;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
 	float InertiaTensor;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310AutoPilot)
-		FVector LocalLinearVelocityTarget;
+	FVector LocalLinearVelocityTarget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310AutoPilot)
-		FVector LocalAngularVelocityTarget;
+	FVector LocalAngularVelocityTarget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Irr310AutoPilot)
-		FVector LocationTarget;
+	FVector LocationTarget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Irr310AutoPilot)
+	int32 ControlMode;
 
 	static const FName LookUpBinding;
 	static const FName LookRightBinding;
 
 private:
 	
+	Irr310BlackBox BlackBox;
 
 	FVector TickSumForce;
 	FVector TickSumTorque;
@@ -79,4 +87,6 @@ private:
 	void OnRandomizeRotationSpeed();
 	void OnPichtCommand(float Val);
 	void OnYawCommand(float Val);
+	void OnRollCommand(float Val);
+	void OnThrustCommand(float Val);
 };
