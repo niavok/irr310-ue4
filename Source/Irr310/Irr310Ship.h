@@ -64,19 +64,20 @@ private:
 	FVector TickSumForce;
 	FVector TickSumTorque;
 
-	void PhysicSubTick(float deltaTime);
+	void PhysicSubTick(float DeltaSeconds);
 	
-	void AutoPilotSubTick(float deltaTime);
+	void AutoPilotSubTick(float DeltaSeconds);
 
-	float* ComputeLinearVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed, float ThrustAngleLimit);
-	float* ComputeLinearVelocityStabilisationWithRotation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
+	float* ComputeLinearVelocityStabilisation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed, float ThrustAngleLimit);
+	float* ComputeLinearVelocityStabilisationOld(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed, float ThrustAngleLimit);
+	float* ComputeLinearVelocityStabilisationWithRotation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
 	
 	float* ComputeAngularVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
 
 
 	float* ComputeAngularControl(TArray<UActorComponent*>& Engines, FVector LocalShipAxis, FVector TargetAxis);
-	float* ComputePositionWithoutRotationControl(TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed);
-	float* ComputePositionWithRotationControl(TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed);
+	float* ComputePositionWithoutRotationControl(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed);
+	float* ComputePositionWithRotationControl(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed);
 	
 
 
