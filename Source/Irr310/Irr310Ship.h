@@ -3,7 +3,7 @@
 #pragma once
 
 #include "GameFramework/Pawn.h"
-#include "Irr310BlackBox.h"
+#include "Irr310FlightRecorder.h"
 #include "Irr310Ship.generated.h"
 
 /**
@@ -14,7 +14,7 @@ class IRR310_API AIrr310Ship : public APawn
 {
 	GENERATED_UCLASS_BODY()
 
-	virtual void Tick(float deltaTime) override;
+	virtual void Tick(float DeltaSeconds) override;
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 
@@ -59,7 +59,7 @@ public:
 
 private:
 	
-	Irr310BlackBox BlackBox;
+	Irr310FlightRecorder FlightRecorder;
 
 	FVector TickSumForce;
 	FVector TickSumTorque;

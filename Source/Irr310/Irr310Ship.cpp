@@ -7,7 +7,7 @@
 
 AIrr310Ship::AIrr310Ship(const class FPostConstructInitializeProperties& PCIP):
 Super(PCIP),
-BlackBox(this)
+FlightRecorder(this)
 {
 	UE_LOG(LogTemp, Warning, TEXT("new AIrr310Ship"));
 	Mass = 500;
@@ -17,17 +17,20 @@ BlackBox(this)
 	TickSumTorque = FVector::ZeroVector;
 }
 
-void AIrr310Ship::Tick(float deltaTime)
+void AIrr310Ship::Tick(float DeltaSeconds)
 {
-	Super::Tick(deltaTime);
+	Super::Tick(DeltaSeconds);
 	
-	AutoPilotSubTick(deltaTime);
+	AutoPilotSubTick(DeltaSeconds);
 	
+
+	FlightRecorder.WriteState(DeltaSeconds);
+
 	// Tick Modules
 	TArray<UActorComponent*> Modules = GetComponentsByClass(UIrr310ShipModule::StaticClass());
 	for (int32 i = 0; i < Modules.Num(); i++) {
 		UIrr310ShipModule* Module = Cast<UIrr310ShipModule>(Modules[i]);
-		Module->TickModule(this, deltaTime);
+		Module->TickModule(this, DeltaSeconds);
 	}
 	
 	//Configure camera
@@ -40,9 +43,9 @@ void AIrr310Ship::Tick(float deltaTime)
 		InternalCamera->RelativeRotation = HeadRotation;
 	}
 
-	PhysicSubTick(deltaTime);
+	PhysicSubTick(DeltaSeconds);
 
-	BlackBox.WriteState();
+	
 }
 
 const FName AIrr310Ship::LookUpBinding("LookUp");
@@ -593,7 +596,7 @@ float* AIrr310Ship::ComputeAngularVelocityStabilisation(TArray<UActorComponent*>
 
 			TorqueDirection.Normalize();
 
-			float DeltaSpeedInTorqueAxis = FVector::DotProduct(TorqueDirection, DeltaVelocity);
+			DeltaSpeedInTorqueAxis = FVector::DotProduct(TorqueDirection, DeltaVelocity);
 		}
 
 		float FinalThurstRatio = 0; //TODO
