@@ -249,7 +249,7 @@ void AIrr310Ship::AutoPilotSubTick(float DeltaSeconds)
 		// Manual control
 		FVector linearTarget = c->GetComponentToWorld().GetRotation().RotateVector(LocalLinearVelocityTarget);
 		FVector angularTarget = c->GetComponentToWorld().GetRotation().RotateVector(LocalAngularVelocityTarget);
-		EngineCommands.Add(ComputeLinearVelocityStabilisation(DeltaSeconds, Engines, linearTarget, 0.5));
+		EngineCommands.Add(ComputeLinearVelocityStabilisation(DeltaSeconds, Engines, linearTarget, 0.0));
 		//EngineCommands.Add(ComputeLinearVelocityStabilisationWithRotation(DeltaSeconds, Engines, linearTarget));
 		EngineCommands.Add(ComputeAngularVelocityStabilisation(Engines, angularTarget));
 		// Keep head up
@@ -486,7 +486,7 @@ float* AIrr310Ship::ComputeLinearVelocityStabilisationOld(TArray<UActorComponent
 }
 
 
-float* AIrr310Ship::ComputeLinearVelocityStabilisation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector WorldTargetSpeed, float ThrustAngleLimit)
+float* AIrr310Ship::ComputeLinearVelocityStabilisationOld2(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector WorldTargetSpeed, float ThrustAngleLimit)
 {
 	UPrimitiveComponent* c = (UPrimitiveComponent*)RootComponent;
 	
@@ -632,6 +632,69 @@ float* AIrr310Ship::ComputeLinearVelocityStabilisation(float DeltaSeconds, TArra
 			float ThrustAjustement = DeltaVelocityToStop * Mass / DeltaSeconds;
 			ThrustCommand += FMath::Clamp((FinalThurstRatio.Z + ThrustAjustement / TotalMaxThrust.Z) * dot.Z, -1.0f, 1.0f);
 		}
+
+		if (FMath::IsNearlyZero(ThrustCommand)) {
+			ThrustCommand = 0;
+		}
+		command[i] = ThrustCommand;
+	}
+
+	return command;
+}
+
+
+float* AIrr310Ship::ComputeLinearVelocityStabilisation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector WorldTargetSpeed, float ThrustAngleLimit)
+{
+	UPrimitiveComponent* c = (UPrimitiveComponent*)RootComponent;
+	FVector WorldVelocity = GetLinearSpeed();
+	
+	// Compute the equilibrium Thrust: Target Air Resistance = Total Thurst
+	float Ro = 1.6550; // Air density
+	float A = 1 * 0.5;
+	FVector TargetAirResistance = computeAngularAirResistance(WorldTargetSpeed, Ro, A);
+	FVector CurrentAirResistance = computeAngularAirResistance(WorldVelocity, Ro, A);
+
+	FVector GravityForce = computeGravity() * Mass;
+	FVector LevitationForce = computeLevitation(GetActorLocation() / 100) * Mass;
+
+	// Compute final thrust
+	// Its the thrust to keep the WorldTargetSpeed constant if the ship is at WorldTargetSpeed
+	// The final thrust is the negative off all forces : air resistance, gravity and levitation
+	FVector FinalThurst = -(TargetAirResistance + GravityForce + LevitationForce);
+	
+	float* command = new float[Engines.Num()];
+	for (int32 i = 0; i < Engines.Num(); i++) {
+		UIrr310ShipEngine* Engine = Cast<UIrr310ShipEngine>(Engines[i]);
+
+		FVector WorldThurstAxis = Engine->GetComponentToWorld().GetRotation().RotateVector(Engine->ThrustAxis);
+		float LocalTargetVelocity = FVector::DotProduct(WorldThurstAxis, WorldTargetSpeed);
+
+		float TotalMaxThrustInAxis = FVector::DotProduct(WorldThurstAxis, getTotalMaxThrustInAxis(Engines, WorldThurstAxis, ThrustAngleLimit));
+		float FinalThurstInAxis = FVector::DotProduct(WorldThurstAxis, FinalThurst);
+		float FinalThurstRatio;
+		if (FMath::IsNearlyZero(FinalThurstInAxis) || FMath::IsNearlyZero(TotalMaxThrustInAxis)) {
+			// No need to thrust compensation
+			FinalThurstRatio = 0;
+		}
+		else 
+		{
+			// Find total thurst in limit in the axis of FinalThrust
+			FinalThurstRatio = FMath::Clamp(FinalThurstInAxis / TotalMaxThrustInAxis, -1.f, 1.f);
+		}
+
+		
+		// Compute delta to stop
+		float WorldVelocityToEnginesStop = FVector::DotProduct(WorldThurstAxis, WorldVelocity);
+		WorldVelocityToEnginesStop += FVector::DotProduct(WorldThurstAxis, getDeltaVToEnginesRatio(Engines, Mass, FinalThurstRatio, WorldThurstAxis, ThrustAngleLimit));
+
+		// Check if air resistant won't make the estimation optimist.
+		WorldVelocityToEnginesStop += FVector::DotProduct(WorldThurstAxis, (getEngineToRatioDuration(Engine, FinalThurstRatio) * (-FinalThurst) / Mass)); // Assusme the air resistance will be almost constant during all the process. It's wrong, but it's better than noting
+
+		float DeltaVelocityToStop = (LocalTargetVelocity - WorldVelocityToEnginesStop);
+
+		float ThrustAjustement = DeltaVelocityToStop * Mass / (1.5*DeltaSeconds);
+		float ThrustCommand = FMath::Clamp((FinalThurstRatio + ThrustAjustement / TotalMaxThrustInAxis), -1.0f, 1.0f);
+	
 
 		if (FMath::IsNearlyZero(ThrustCommand)) {
 			ThrustCommand = 0;

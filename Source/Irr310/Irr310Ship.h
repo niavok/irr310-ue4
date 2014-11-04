@@ -68,8 +68,7 @@ private:
 	
 	void AutoPilotSubTick(float DeltaSeconds);
 
-	float* ComputeLinearVelocityStabilisation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed, float ThrustAngleLimit);
-	float* ComputeLinearVelocityStabilisationOld(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed, float ThrustAngleLimit);
+	float* ComputeLinearVelocityStabilisation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector WorldTargetSpeed, float ThrustAngleLimit);
 	float* ComputeLinearVelocityStabilisationWithRotation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
 	
 	float* ComputeAngularVelocityStabilisation(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
