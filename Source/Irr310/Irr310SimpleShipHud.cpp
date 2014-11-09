@@ -133,6 +133,14 @@ void AIrr310SimpleShipHUD::DrawHUD()
 		Canvas->DrawItem(WorldAngularSpeedTextItem);
 		line += lineHeight;
 	
+		// World Rotation Speed
+		FCanvasTextItem ControlModeTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
+			FText::Format(LOCTEXT("Mode", "Autopilot Mode= {0}"),
+			FText::AsNumber(Ship->ControlMode)),
+			HUDFont, FLinearColor::Black);
+		ControlModeTextItem.Scale = ScaleVec;
+		Canvas->DrawItem(ControlModeTextItem);
+		line += lineHeight;
 	}
 }
 

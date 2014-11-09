@@ -72,11 +72,13 @@ private:
 	float* ComputeLinearVelocityStabilisationWithRotation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
 	
 	float* ComputeAngularVelocityStabilisation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
-	float* ComputeAngularVelocityStabilisationOld(TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
-
-
+	
 	float* ComputeAngularControl(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalShipAxis, FVector TargetAxis);
-	float* ComputePositionWithoutRotationControl(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed);
+
+
+	float* ComputePositionWithoutRotationControlOld(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed);
+	float* ComputePositionWithoutRotationControl(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector TargetLocation, FVector SpeedAtTarget, FVector TargetSpeed, float maxSpeed);
+
 	float* ComputePositionWithRotationControl(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed);
 	
 
@@ -86,6 +88,10 @@ private:
 	void OnDecreaseLinearVelocity();
 	void OnKillLinearVelocity();
 	void OnRandomizeRotationSpeed();
+
+	void OnIncrementMode();
+	void OnDecrementMode();
+
 	void OnPichtCommand(float Val);
 	void OnYawCommand(float Val);
 	void OnRollCommand(float Val);
