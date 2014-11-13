@@ -34,6 +34,8 @@ void UIrr310ShipEngine::TickModule(AIrr310Ship* ship, float deltaTime)
 		CurrentThrust = FMath::Max(CurrentThrust, TargetThrust);
 	}
 
+	CurrentThrust = TargetThrust;
+
 	CurrentThrust = FMath::Clamp(CurrentThrust, MinThrust, MaxThrust);
 
 
