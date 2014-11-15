@@ -48,6 +48,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310AutoPilot)
 	FVector LocalAngularVelocityTarget;
 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Irr310AutoPilot)
+	FVector FrontAxisTarget;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Irr310AutoPilot)
 	FVector LocationTarget;
 
@@ -61,8 +65,11 @@ private:
 	
 	Irr310FlightRecorder FlightRecorder;
 
+	// Temporary variable reset each tich
 	FVector TickSumForce;
 	FVector TickSumTorque;
+	FVector COM;
+
 
 	void PhysicSubTick(float DeltaSeconds);
 	
