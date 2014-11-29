@@ -5,6 +5,8 @@
 #include "Irr310ShipModule.h"
 #include "Irr310ShipEngine.h"
 
+#include "Irr310PhysicHelper.h"
+
 AIrr310Ship::AIrr310Ship(const class FPostConstructInitializeProperties& PCIP):
 Super(PCIP),
 FlightRecorder(this)
@@ -95,7 +97,7 @@ void AIrr310Ship::AddForceAtLocation(FVector force, FVector applicationPoint)
 	UPrimitiveComponent* c = (UPrimitiveComponent*)RootComponent;
 	FVector COM = c->GetComponentToWorld().TransformPosition(LocalCOM);
 
-	FVector ApplicationOffset = (applicationPoint - COM) / 100;
+	FVector ApplicationOffset = (applicationPoint - COM) / 100; // TODO divise by 100 in parameter
 
 	TickSumTorque += FVector::CrossProduct(ApplicationOffset, force);
 
@@ -155,11 +157,6 @@ static FVector getTotalMaxTorqueInAxis(TArray<UActorComponent*>& Engines, FVecto
 
 // Tools
 static float computeSoftAngularCommand(float measure, float mMaxAngularSpeed, float mSoftModeAngularLimit, float command);
-static FVector computeLinearAirResistance(FVector velocity, float Ro, float A);
-static FVector computeAngularAirResistance(FVector velocity, float Ro);
-static FVector computeGravity();
-static FVector computeLevitation(FVector location);
-
 
 void AIrr310Ship::PhysicSubTick(float deltaTime)
 {
@@ -169,18 +166,18 @@ void AIrr310Ship::PhysicSubTick(float deltaTime)
 	//UE_LOG(LogTemp, Warning, TEXT("01 - Acceleration: %s"), *Acceleration.ToString());
 
 	// Gravity
-	FVector Gravity = computeGravity();
+	FVector Gravity = Irr310PhysicHelper::ComputeGravity();
 
 	//UE_LOG(LogTemp, Warning, TEXT("02 - Acceleration: %s"), *Acceleration.ToString());
 
 	// Levitation
-	FVector Levitation = computeLevitation(GetActorLocation() / 100); // At 13850 m gravity and levitation ar equal.
+	FVector Levitation = Irr310PhysicHelper::ComputeLevitation(GetActorLocation() / 100); // At 13850 m gravity and levitation ar equal.
 
 
 	// Air resistance
 	float Ro = 1.6550; // Air density
 	float A = 1 * 0.5;
-	FVector AirResistance = computeLinearAirResistance(c->GetPhysicsLinearVelocity() / 100, Ro, A);
+	FVector AirResistance = Irr310PhysicHelper::ComputeLinearAirResistance(c->GetPhysicsLinearVelocity() / 100, Ro, A);
 
 	FVector Acceleration = FVector(0);
 	Acceleration += Gravity;
@@ -216,7 +213,7 @@ void AIrr310Ship::PhysicSubTick(float deltaTime)
 	FVector AngularVelocityDirection = c->GetPhysicsAngularVelocity();
 	AngularVelocityDirection.Normalize();
 
-	FVector AngularAirResistance = computeAngularAirResistance(c->GetPhysicsAngularVelocity(), Ro);
+	FVector AngularAirResistance = Irr310PhysicHelper::ComputeAngularAirResistance(c->GetPhysicsAngularVelocity(), Ro);
 
 	FVector AngularAcceleration = FVector(0);
 	AngularAcceleration += TickSumTorque / WorldInertiaTensor;
@@ -331,11 +328,11 @@ float* AIrr310Ship::ComputeLinearVelocityStabilisation(float DeltaSeconds, TArra
 	// Compute the equilibrium Thrust: Target Air Resistance = Total Thurst
 	float Ro = 1.6550; // Air density
 	float A = 1 * 0.5;
-	FVector TargetAirResistance = computeLinearAirResistance(WorldTargetSpeed, Ro, A);
-	FVector CurrentAirResistance = computeLinearAirResistance(WorldVelocity, Ro, A);
+	FVector TargetAirResistance = Irr310PhysicHelper::ComputeLinearAirResistance(WorldTargetSpeed, Ro, A);
+	FVector CurrentAirResistance = Irr310PhysicHelper::ComputeLinearAirResistance(WorldVelocity, Ro, A);
 
-	FVector GravityForce = computeGravity() * Mass;
-	FVector LevitationForce = computeLevitation(GetActorLocation() / 100) * Mass;
+	FVector GravityForce = Irr310PhysicHelper::ComputeGravity() * Mass;
+	FVector LevitationForce = Irr310PhysicHelper::ComputeLevitation(GetActorLocation() / 100) * Mass;
 
 	// Compute final thrust
 	// Its the thrust to keep the WorldTargetSpeed constant if the ship is at WorldTargetSpeed
@@ -407,10 +404,10 @@ float* AIrr310Ship::ComputeLinearVelocityStabilisationWithRotation(float DeltaSe
 
 	float Ro = 1.6550; // Air density
 	float A = 1 * 0.5;
-	FVector TargetAirResistance = computeLinearAirResistance(WorldTargetSpeed, Ro, A);
+	FVector TargetAirResistance = Irr310PhysicHelper::ComputeLinearAirResistance(WorldTargetSpeed, Ro, A);
 
-	FVector GravityForce = computeGravity() * Mass;
-	FVector LevitationForce = computeLevitation(GetActorLocation() / 100) * Mass;
+	FVector GravityForce = Irr310PhysicHelper::ComputeGravity() * Mass;
+	FVector LevitationForce = Irr310PhysicHelper::ComputeLevitation(GetActorLocation() / 100) * Mass;
 
 	// Compute final thrust
 	// Its the thrust to keep the WorldTargetSpeed constant if the ship is at WorldTargetSpeed
@@ -512,8 +509,8 @@ float* AIrr310Ship::ComputeAngularVelocityStabilisation(float DeltaSeconds, TArr
 	FVector AngularVelocity = c->GetPhysicsAngularVelocity();
 
 	float Ro = 1.6550; // Air density
-	FVector TargetAirResistance = computeAngularAirResistance(WorldTargetSpeed, Ro);
-	FVector CurrentAirResistance = computeAngularAirResistance(AngularVelocity, Ro);
+	FVector TargetAirResistance = Irr310PhysicHelper::ComputeAngularAirResistance(WorldTargetSpeed, Ro);
+	FVector CurrentAirResistance = Irr310PhysicHelper::ComputeAngularAirResistance(AngularVelocity, Ro);
 
 	
 	// Compute final thrust
@@ -782,10 +779,10 @@ float* AIrr310Ship::ComputePositionWithoutRotationControl(float DeltaSeconds, TA
 		
 		float Ro = 1.6550; // Air density
 		float A = 1 * 0.5;
-		FVector TargetAirResistance = computeLinearAirResistance(SpeedAtTarget, Ro, A);
+		FVector TargetAirResistance = Irr310PhysicHelper::ComputeLinearAirResistance(SpeedAtTarget, Ro, A);
 		
-		FVector GravityForce = computeGravity() * Mass;
-		FVector LevitationForce = computeLevitation(GetActorLocation() / 100) * Mass;
+		FVector GravityForce = Irr310PhysicHelper::ComputeGravity() * Mass;
+		FVector LevitationForce = Irr310PhysicHelper::ComputeLevitation(GetActorLocation() / 100) * Mass;
 
 		// Compute final thrust
 		// Its the thrust to keep the WorldTargetSpeed constant if the ship is at WorldTargetSpeed
@@ -1249,31 +1246,4 @@ static float computeSoftAngularCommand(float measure, float mMaxAngularSpeed, fl
 	return result;
 }
 
-static FVector computeLinearAirResistance(FVector Velocity, float Ro, float A) {
-	float SquareVelocity = Velocity.SizeSquared(); // UE4 is in cm
-	FVector VelocityDirection = Velocity;
-	VelocityDirection.Normalize();
 
-	return -VelocityDirection * 0.5f * Ro * A * SquareVelocity;
-}
-
-static FVector computeAngularAirResistance(FVector Velocity, float Ro) {
-	float SquareAngularVelocity = Velocity.SizeSquared(); // UE4 is in cm
-	FVector AngularVelocityDirection = Velocity;
-	AngularVelocityDirection.Normalize();
-
-	return -AngularVelocityDirection * 0.01f * Ro * SquareAngularVelocity;
-}
-
-
-static FVector computeGravity() {
-	return FVector(0, 0, -13.62); // 13.62 m/s²
-}
-
-
-/**
-Return leviration acceleration
-*/
-static FVector computeLevitation(FVector location) {
-	return FVector(0, 0, 2.612622450e9 / FMath::Square(location.Z + 13850)); // At 13850 m gravity and levitation ar equal.
-}
