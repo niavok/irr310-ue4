@@ -443,7 +443,7 @@ float* AIrr310Ship::ComputeLinearVelocityStabilisationWithRotation(float DeltaSe
 	FVector MaxTorqueInAxis = getTotalMaxTorqueInAxis(Engines, DeltaVelocityAxis, COM, 0);
 	float UsefullTorque = FVector::DotProduct(DeltaVelocityAxis, MaxTorqueInAxis);
 
-	float dot = FVector::DotProduct(LocalMaxThrustDirection, DeltaVelocityAxis);
+	float dot = FVector::DotProduct(MaxThrustDirection, DeltaVelocityAxis);
 	float angle = FMath::RadiansToDegrees(FMath::Acos(dot));
 
 	float TimeToRotate= 2 * angle * InertiaTensor / UsefullTorque;
@@ -843,6 +843,7 @@ float* AIrr310Ship::ComputePositionWithoutRotationControl(float DeltaSeconds, TA
 			MaxPreciseSpeed = FMath::Max(0.f, MaxPreciseSpeed);
 
 			//UE_LOG(LogTemp, Warning, TEXT("3 - MaxPreciseSpeed: %f"), MaxPreciseSpeed);
+			//UE_LOG(LogTemp, Warning, TEXT("3 - LateralDeltaVelocity: %f"), LateralDeltaVelocity);
 
 			RelativeResultSpeed = DeltaLocation;
 			RelativeResultSpeed.Normalize();
