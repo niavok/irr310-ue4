@@ -19,6 +19,10 @@ public:
 	*/
 	static FVector ComputeLevitation(FVector location);
 
+	static float ComputeLiftRatio(float MaxLiftRatio, float  AngleOfAttack);
+
+	static float ComputeLift(float SquareVelocity, float Ro, float LiftRatio, float Surface);
+
 private:
 	Irr310PhysicHelper();
 	virtual ~Irr310PhysicHelper();

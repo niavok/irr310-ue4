@@ -21,6 +21,17 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
 	float Surface;
 
+	/* Lift ratio at 15°*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
-	FVector SurfaceAxis;
+	float MaxLiftRatio;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
+	FVector LocalSurfaceAxis;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
+	FVector LocalLeadingEdgeAxis;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
+	FVector LocalForceOffset;
+
 };
