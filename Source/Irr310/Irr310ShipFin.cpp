@@ -59,6 +59,14 @@ void UIrr310ShipFin::TickModule(AIrr310Ship* Ship, float DeltaTime)
 
 	FVector AirResistance = Irr310PhysicHelper::ComputeLinearAirResistance(LinearSpeed, Ro, A);
 	Ship->AddForceAtLocation(AirResistance, ForceCenterLocation*100); // TOD unit
+	DrawDebugLine(
+		GetWorld(),
+		ForceCenterLocation * 100,
+		ForceCenterLocation * 100 + AirResistance,
+		FColor(0, 255, 0),
+		false, -1, 0,
+		6
+		);
 
 
 	// Lift
@@ -76,13 +84,116 @@ void UIrr310ShipFin::TickModule(AIrr310Ship* Ship, float DeltaTime)
 
 	float AngleOfAttack = FMath::RadiansToDegrees(FMath::Acos(Dot));
 
-	float LiftSign = FMath::Sign(FVector::DotProduct(SurfaceAxis, AirSpeedInLeadingPlaneAxis));
-
+	
 	float LiftRatio = Irr310PhysicHelper::ComputeLiftRatio(MaxLiftRatio, AngleOfAttack);
 	float Lift = Irr310PhysicHelper::ComputeLift(AirSpeedInLeadingPlane.SizeSquared(), Ro, LiftRatio, Surface);
+	//UE_LOG(LogTemp, Warning, TEXT("AngleOfAttack: %f"), AngleOfAttack);
 
+	float LiftSign = FMath::Sign(FVector::DotProduct(SurfaceAxis, AirSpeedInLeadingPlaneAxis));
 
-	FVector LiftAxis = - LiftSign * FVector::CrossProduct(AirSpeedInLeadingPlaneAxis, LeadingEdgeAxis);
+	FVector LiftAxis = - LiftSign *GetCurrentThurstAxis();
+
+	DrawDebugLine(
+		GetWorld(),
+		ForceCenterLocation * 100,
+		ForceCenterLocation * 100 + Lift * LiftAxis,
+		FColor(255, 0, 0),
+		false, -1, 0,
+		6
+		);
 
 	Ship->AddForceAtLocation(Lift * LiftAxis, ForceCenterLocation*100); // TOD unit
+}
+
+void UIrr310ShipFin::SetTargetThrustRatio(float ratio) {
+	// Do nothing, common fins are not controllable
+}
+
+FVector UIrr310ShipFin::GetCurrentThurstAxis() const
+{
+	AIrr310Ship* Ship = Cast<AIrr310Ship>(GetOwner());
+
+	// TODO Cache these operations
+	FVector SurfaceAxis = GetComponentToWorld().GetRotation().RotateVector(LocalSurfaceAxis);
+	FVector LeadingEdgeAxis = GetComponentToWorld().GetRotation().RotateVector(LocalLeadingEdgeAxis);
+
+	FVector LinearSpeed = Ship->GetLinearSpeed();
+
+
+	FVector ForceOffset = GetComponentToWorld().GetRotation().RotateVector(LocalForceOffset);
+	FVector ForceCenterLocation = GetComponentLocation() / 100;
+	ForceCenterLocation += ForceOffset;
+
+
+	//Add linear speed induced by rotation
+	FVector Distance = (ForceCenterLocation - Ship->GetLocation());
+	FVector LocalLinearSpeed = FVector::CrossProduct(Ship->getWorldAngularVelocity(), Distance) * PI / 180;
+
+	LinearSpeed += LocalLinearSpeed;
+	
+	// Lift Axis.
+	FVector AirSpeedInLeadingPlane = FVector::CrossProduct(LeadingEdgeAxis, FVector::CrossProduct(LinearSpeed, LeadingEdgeAxis));
+	FVector AirSpeedInLeadingPlaneAxis = AirSpeedInLeadingPlane;
+	AirSpeedInLeadingPlaneAxis.Normalize();
+
+	FVector LiftAxis = FVector::CrossProduct(AirSpeedInLeadingPlaneAxis, LeadingEdgeAxis);
+
+	return LiftAxis;
+}
+
+float UIrr310ShipFin::GetCurrentMaxThrust() const
+{
+	AIrr310Ship* Ship = Cast<AIrr310Ship>(GetOwner());
+
+	// TODO Cache these operations
+	FVector SurfaceAxis = GetComponentToWorld().GetRotation().RotateVector(LocalSurfaceAxis);
+	FVector LeadingEdgeAxis = GetComponentToWorld().GetRotation().RotateVector(LocalLeadingEdgeAxis);
+
+	FVector LinearSpeed = Ship->GetLinearSpeed();
+
+
+	FVector ForceOffset = GetComponentToWorld().GetRotation().RotateVector(LocalForceOffset);
+	FVector ForceCenterLocation = GetComponentLocation() / 100;
+	ForceCenterLocation += ForceOffset;
+
+
+	//Add linear speed induced by rotation
+	FVector Distance = (ForceCenterLocation - Ship->GetLocation());
+	FVector LocalLinearSpeed = FVector::CrossProduct(Ship->getWorldAngularVelocity(), Distance) * PI / 180;
+
+	LinearSpeed += LocalLinearSpeed;
+
+	// Current Lift
+
+	// Chord axis
+	FVector ChordAxis = FVector::CrossProduct(LeadingEdgeAxis, SurfaceAxis);
+	ChordAxis.Normalize();
+
+	FVector AirSpeedInLeadingPlane = FVector::CrossProduct(LeadingEdgeAxis, FVector::CrossProduct(LinearSpeed, LeadingEdgeAxis));
+	FVector AirSpeedInLeadingPlaneAxis = AirSpeedInLeadingPlane;
+	AirSpeedInLeadingPlaneAxis.Normalize();
+
+	float Dot = FVector::DotProduct(ChordAxis, AirSpeedInLeadingPlaneAxis);
+
+	float AngleOfAttack = FMath::RadiansToDegrees(FMath::Acos(Dot));
+
+	float Ro = 1.6550; // Air density
+	float LiftRatio = Irr310PhysicHelper::ComputeLiftRatio(MaxLiftRatio, AngleOfAttack);
+
+	float Lift = Irr310PhysicHelper::ComputeLift(AirSpeedInLeadingPlane.SizeSquared(), Ro, LiftRatio, Surface);
+
+	return Lift;
+}
+
+float UIrr310ShipFin::GetCurrentMinThrust() const
+{
+	//Same as max
+	return GetCurrentMaxThrust();
+}
+
+FVector UIrr310ShipFin::GetThrustLocation() const
+{
+	FVector ForceOffset = GetComponentToWorld().GetRotation().RotateVector(LocalForceOffset);
+	FVector ForceCenterLocation = GetComponentLocation() / 100;
+	return ForceCenterLocation += ForceOffset;
 }

@@ -14,7 +14,6 @@ UIrr310ShipEngine::UIrr310ShipEngine(const class FPostConstructInitializePropert
 	MinThrust = 0;
 	MaxThrust = 1000;
 	TargetThrust = 0;
-	ThrustVariationSpeed = 10000;
 	ThrustAxis = FVector(0, 0, 1);
 }
 
@@ -23,19 +22,7 @@ void UIrr310ShipEngine::TickModule(AIrr310Ship* ship, float deltaTime)
 	Super::TickModule(ship, deltaTime);
 	//UE_LOG(LogTemp, Warning, TEXT("UIrr310ShipEngine::TickModule"));
 	
-	// Apply thrust variation to reach target
-	if (CurrentThrust < TargetThrust) {
-		CurrentThrust += ThrustVariationSpeed * deltaTime;
-		CurrentThrust = FMath::Min(CurrentThrust, TargetThrust);
-	}
-	else if (CurrentThrust > TargetThrust)
-	{
-		CurrentThrust -= ThrustVariationSpeed * deltaTime;
-		CurrentThrust = FMath::Max(CurrentThrust, TargetThrust);
-	}
-
 	CurrentThrust = TargetThrust;
-
 	CurrentThrust = FMath::Clamp(CurrentThrust, MinThrust, MaxThrust);
 
 
@@ -63,4 +50,24 @@ void UIrr310ShipEngine::SetTargetThrustRatio(float ratio) {
 	else {
 		TargetThrust = 0;
 	}
+}
+
+FVector UIrr310ShipEngine::GetCurrentThurstAxis() const
+{
+	return GetComponentToWorld().GetRotation().RotateVector(ThrustAxis);;
+}
+
+float UIrr310ShipEngine::GetCurrentMaxThrust() const
+{
+	return MaxThrust;
+}
+
+float UIrr310ShipEngine::GetCurrentMinThrust() const
+{
+	return MinThrust;
+}
+
+FVector UIrr310ShipEngine::GetThrustLocation() const
+{
+	return GetComponentLocation() / 100;
 }

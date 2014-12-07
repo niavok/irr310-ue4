@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "Irr310ShipMovementActor.h"
-#include "Irr310ShipEngine.generated.h"
+#include "Irr310ShipFin.h"
+#include "Irr310ShipControlSurface.generated.h"
 
 class AIrr310Ship;
 
@@ -11,43 +11,42 @@ class AIrr310Ship;
  * 
  */
 UCLASS(Blueprintable, ClassGroup = (Irr310, Ship), meta = (BlueprintSpawnableComponent))
-class IRR310_API UIrr310ShipEngine : public UIrr310ShipMovementActor
+class IRR310_API UIrr310ShipControlSurface : public UIrr310ShipFin
 {
 	GENERATED_UCLASS_BODY()
 
 public:
-	virtual void TickModule(AIrr310Ship* ship, float deltaTime) override;
+
+	virtual void TickModule(AIrr310Ship* Ship, float DeltaTime) override;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
+	float MinimumAngle;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
-	float CurrentThrust;
+	float MaximumAngle;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
-	float MinThrust;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,  Category = Irr310Physics)
-	float MaxThrust;
+	float CurrentAngle;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
-	float TargetThrust;
+	float TargetAngle;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
-	FVector ThrustAxis;
-
-
-	virtual FVector GetCurrentThurstAxis() const;
+	FVector LocalSurfaceNeutralLocalAxis;
 
 	virtual float GetCurrentMaxThrust() const;
 
 	virtual float GetCurrentMinThrust() const;
 
-	virtual FVector GetThrustLocation() const;
-
 	/**
-	  * Configure the target thrust
-	  * 1 for max trust
-	  * 0 for no thrust
-	  * -1 for max reverse thrust
-	  */
-	void SetTargetThrustRatio(float ratio);
+	* Configure the target thrust
+	* 1 for max trust
+	* 0 for no thrust
+	* -1 for max reverse thrust
+	*/
+	virtual void SetTargetThrustRatio(float ratio);
 
+private:
+	float GetTargetAngleForAngleOfAttack(float TargetAngleOfAttack);
+
+	float VisualAngle;
 };

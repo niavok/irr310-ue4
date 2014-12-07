@@ -61,7 +61,6 @@ void Irr310FlightRecorder::WriteState(float DeltaSeconds)
 		WriteLine(FString::Printf(TEXT("  TargetThrust=%f"), Engine->TargetThrust));
 		WriteLine(FString::Printf(TEXT("  MinThrust=%f"), Engine->MinThrust));
 		WriteLine(FString::Printf(TEXT("  MaxThrust=%f"), Engine->MaxThrust));
-		WriteLine(FString::Printf(TEXT("  ThrustVariationSpeed=%f"), Engine->ThrustVariationSpeed));
 		WriteLine(FString::Printf(TEXT("  ThrustAxis=%s"), *Engine->ThrustAxis.ToString()));
 	}
 

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Irr310ShipModule.h"
+#include "Irr310ShipMovementActor.h"
 #include "Irr310ShipFin.generated.h"
 
 class AIrr310Ship;
@@ -11,7 +11,7 @@ class AIrr310Ship;
  * 
  */
 UCLASS(Blueprintable, ClassGroup = (Irr310, Ship), meta = (BlueprintSpawnableComponent))
-class IRR310_API UIrr310ShipFin : public UIrr310ShipModule
+class IRR310_API UIrr310ShipFin : public UIrr310ShipMovementActor
 {
 	GENERATED_UCLASS_BODY()
 
@@ -34,4 +34,19 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Irr310Physics)
 	FVector LocalForceOffset;
 
+	virtual FVector GetCurrentThurstAxis() const;
+
+	virtual float GetCurrentMaxThrust() const;
+
+	virtual float GetCurrentMinThrust() const;
+
+	virtual FVector GetThrustLocation() const;
+
+	/**
+	* Configure the target thrust
+	* 1 for max trust
+	* 0 for no thrust
+	* -1 for max reverse thrust
+	*/
+	virtual void SetTargetThrustRatio(float ratio);
 };

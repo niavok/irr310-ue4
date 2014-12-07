@@ -19,17 +19,17 @@ class IRR310_API AIrr310Ship : public APawn
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 
 public:
-	FVector GetLinearSpeed();
+	FVector GetLinearSpeed() const;
 
-	FVector GetLocalLinearSpeed();
+	FVector GetLocalLinearSpeed() const;
 
-	float GetAltitude();
+	float GetAltitude() const;
 
-	FVector GetLocation();
+	FVector GetLocation() const;
 
-	FVector getLocalAngularVelocity();
+	FVector getLocalAngularVelocity() const;
 
-	FVector getWorldAngularVelocity();
+	FVector getWorldAngularVelocity() const;
 
 	void AddForceAtLocation(FVector force, FVector applicationPoint);
 
@@ -75,18 +75,18 @@ private:
 	
 	void AutoPilotSubTick(float DeltaSeconds);
 
-	float* ComputeLinearVelocityStabilisation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector WorldTargetSpeed, float ThrustAngleLimit);
-	float* ComputeLinearVelocityStabilisationWithRotation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
+	float* ComputeLinearVelocityStabilisation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector WorldTargetSpeed, float ThrustAngleLimit) const;
+	float* ComputeLinearVelocityStabilisationWithRotation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed) const;
 	
-	float* ComputeAngularVelocityStabilisation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed);
+	float* ComputeAngularVelocityStabilisation(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalTargetSpeed) const;
 	
-	float* ComputeAngularControl(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalShipAxis, FVector TargetAxis);
+	float* ComputeAngularControl(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector LocalShipAxis, FVector TargetAxis) const;
 
 
-	float* ComputePositionWithoutRotationControlOld(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed);
-	float* ComputePositionWithoutRotationControl(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector TargetLocation, FVector SpeedAtTarget, FVector TargetSpeed, float maxSpeed);
+	float* ComputePositionWithoutRotationControlOld(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed) const;
+	float* ComputePositionWithoutRotationControl(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector TargetLocation, FVector SpeedAtTarget, FVector TargetSpeed, float maxSpeed) const;
 
-	float* ComputePositionWithRotationControl(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed);
+	float* ComputePositionWithRotationControl(float DeltaSeconds, TArray<UActorComponent*>& Engines, FVector TargetLocation, float speed) const;
 	
 
 
