@@ -1,6 +1,8 @@
 #include "Irr310.h"
 #include "Irr310PhysicHelper.h"
 
+static const float MAGNETIC_RESISTANCE_CONSTANT = 0.2f;
+
 Irr310PhysicHelper::Irr310PhysicHelper()
 {
 	
@@ -9,6 +11,8 @@ Irr310PhysicHelper::Irr310PhysicHelper()
 Irr310PhysicHelper::~Irr310PhysicHelper()
 {
 }
+
+/*
 FVector Irr310PhysicHelper::ComputeLinearAirResistance(FVector Velocity, float Ro, float A) {
 	float SquareVelocity = Velocity.SizeSquared(); // UE4 is in cm
 	FVector VelocityDirection = Velocity;
@@ -23,6 +27,24 @@ FVector Irr310PhysicHelper::ComputeAngularAirResistance(FVector Velocity, float 
 	AngularVelocityDirection.Normalize();
 
 	return -AngularVelocityDirection * 0.1f * Ro * SquareAngularVelocity;
+}
+*/
+
+
+FVector Irr310PhysicHelper::ComputeLinearMagneticResistance(FVector Velocity, float MagneticMass) {
+	float VelocityValue = Velocity.Size();
+	FVector VelocityDirection = Velocity;
+	VelocityDirection.Normalize();
+
+	return -VelocityDirection * MagneticMass * MAGNETIC_RESISTANCE_CONSTANT * VelocityValue;
+}
+
+FVector Irr310PhysicHelper::ComputeAngularMagneticResistance(FVector Velocity) {
+	float VelocityValue = Velocity.Size();
+	FVector VelocityDirection = Velocity;
+	VelocityDirection.Normalize();
+
+	return -VelocityDirection * MAGNETIC_RESISTANCE_CONSTANT * VelocityValue * 5;
 }
 
 

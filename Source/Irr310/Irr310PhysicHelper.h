@@ -8,9 +8,13 @@ class Irr310PhysicHelper
 public:
 	
 
-	static FVector ComputeLinearAirResistance(FVector Velocity, float Ro, float A);
+	//static FVector ComputeLinearAirResistance(FVector Velocity, float Ro, float A);
 
-	static FVector ComputeAngularAirResistance(FVector Velocity, float Ro);
+	//static FVector ComputeAngularAirResistance(FVector Velocity, float Ro);
+
+	static FVector ComputeLinearMagneticResistance(FVector Velocity, float MagneticMass);
+	
+	static FVector ComputeAngularMagneticResistance(FVector Velocity);
 
 	static FVector ComputeGravity();
 
