@@ -1,7 +1,7 @@
 // Copyright 2014 Frédéric Bertolus, Inc. All Rights Reserved.
 #pragma once
 
-#include "fvec.h"
+#include "Irr310.h"
 
 class Irr310PhysicHelper
 {

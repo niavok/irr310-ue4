@@ -72,7 +72,7 @@ void AIrr310SimpleShipHUD::DrawHUD()
 
 		// Target Angular Speed
 		FCanvasTextItem TargetAngularSpeedTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
-			FText::Format(LOCTEXT("SpeedFormat", "Target local angular speed: Roll = {0} °/s, Pitch = {1} °/s, Yaw = {2} °/s"),
+			FText::Format(LOCTEXT("SpeedFormat", "Target local angular speed: Roll = {0} \370/s, Pitch = {1} \370/s, Yaw = {2} \370/s"),
 			FText::AsNumber(LocalAngularVelocityTarget.X), FText::AsNumber(LocalAngularVelocityTarget.Y), FText::AsNumber(LocalAngularVelocityTarget.Z)),
 			HUDFont, FLinearColor::Black);
 		TargetAngularSpeedTextItem.Scale = ScaleVec;
@@ -90,7 +90,7 @@ void AIrr310SimpleShipHUD::DrawHUD()
 
 		// Local Rotation Speed
 		FCanvasTextItem LocalAngularSpeedTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
-			FText::Format(LOCTEXT("SpeedFormat", "Local angular speed: Roll = {0} °/s, Pitch = {1} °/s, Yaw = {2} °/s"),
+			FText::Format(LOCTEXT("SpeedFormat", "Local angular speed: Roll = {0} \370/s, Pitch = {1} \370/s, Yaw = {2} \370/s"),
 			FText::AsNumber(LocalAngularVelocity.X), FText::AsNumber(LocalAngularVelocity.Y), FText::AsNumber(LocalAngularVelocity.Z)),
 			HUDFont, FLinearColor::Black);
 		LocalAngularSpeedTextItem.Scale = ScaleVec;
@@ -117,7 +117,7 @@ void AIrr310SimpleShipHUD::DrawHUD()
 
 		// World Rotation
 		FCanvasTextItem WorldRotationTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
-			FText::Format(LOCTEXT("SpeedFormat", "World rotation: Roll = {0} °, Pitch = {1} °, Yaw = {2} °"),
+			FText::Format(LOCTEXT("SpeedFormat", "World rotation: Roll = {0} \370, Pitch = {1} \370, Yaw = {2} \370"),
 			FText::AsNumber(WorldRotation.Roll), FText::AsNumber(WorldRotation.Pitch), FText::AsNumber(WorldRotation.Yaw)),
 			HUDFont, FLinearColor::Black);
 		WorldRotationTextItem.Scale = ScaleVec;
@@ -126,7 +126,7 @@ void AIrr310SimpleShipHUD::DrawHUD()
 
 		// World Rotation Speed
 		FCanvasTextItem WorldAngularSpeedTextItem(FVector2D(HUDXRatio * leftMargin, HUDYRatio * line),
-			FText::Format(LOCTEXT("SpeedFormat", "World angular speed: Roll = {0} °/s, Pitch = {1} °/s, Yaw = {2} °/s"),
+			FText::Format(LOCTEXT("SpeedFormat", "World angular speed: Roll = {0} \370/s, Pitch = {1} \370/s, Yaw = {2} \370/s"),
 			FText::AsNumber(WorldAngularVelocity.X), FText::AsNumber(WorldAngularVelocity.Y), FText::AsNumber(WorldAngularVelocity.Z)),
 			HUDFont, FLinearColor::Black);
 		WorldAngularSpeedTextItem.Scale = ScaleVec;

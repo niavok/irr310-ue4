@@ -2,7 +2,7 @@
 
 #include "Irr310.h"
 #include "Irr310GameMode.h"
-#include "Irr310SimpleShipHud.h"
+#include "Irr310SimpleShipHUD.h"
 
 AIrr310GameMode::AIrr310GameMode(const class FPostConstructInitializeProperties& PCIP)
 	: Super(PCIP)

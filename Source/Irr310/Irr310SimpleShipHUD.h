@@ -1,7 +1,7 @@
 // Copyright 1998-2014 Epic Games, Inc. All Rights Reserved.
 #pragma once
 #include "GameFramework/HUD.h"
-#include "Irr310SimpleShipHud.generated.h"
+#include "Irr310SimpleShipHUD.generated.h"
 
 
 UCLASS(config = Game)
